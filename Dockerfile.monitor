@@ -1,0 +1,38 @@
+# Dockerfile for Monitor Service
+FROM python:3.11-slim
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements
+COPY services/monitor/requirements.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY services/monitor/ .
+COPY services/shared/ ./shared/
+
+# Create directories for sessions
+RUN mkdir -p /app/sessions
+
+# Create non-root user
+RUN useradd -m -u 1000 monitoruser && \
+    chown -R monitoruser:monitoruser /app
+
+# Switch to non-root user
+USER monitoruser
+
+# Volume for Pyrogram sessions
+VOLUME ["/app/sessions"]
+
+# Run the monitor
+CMD ["python", "telegram_monitor.py"]

@@ -1,0 +1,55 @@
+name: gift_monitor
+description: "Telegram Gift Monitor - отслеживание подарков в реальном времени"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.8.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # Основные зависимости
+  http: ^1.2.0
+  shared_preferences: ^2.2.3
+  
+  # Уведомления
+  flutter_local_notifications: ^17.1.2
+  permission_handler: ^11.3.1
+  
+  # Фоновая работа
+  flutter_background_service: ^5.0.5
+  flutter_background_service_android: ^6.2.2
+  
+  # Навигация и UI
+  url_launcher: ^6.2.5
+  
+  # Переменные окружения
+  flutter_dotenv: ^5.1.0
+  
+  # UI компоненты
+  cupertino_icons: ^1.0.8
+  
+  # Безопасность
+  crypto: ^3.0.3
+  package_info_plus: ^8.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  
+  # ВАЖНО: .env файл НЕ включен в production сборку!
+  # Все конфиденциальные данные должны быть зашифрованы в коде
+  
+  # Для разработки (раскомментируйте ТОЛЬКО для отладки):
+  # assets:
+  #   - .env
+  
+  # Production конфигурация (используется для релиза):
+  # Никаких assets с конфиденциальными данными!

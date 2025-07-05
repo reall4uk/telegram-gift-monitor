@@ -1,0 +1,53 @@
+# Core dependencies
+fastapi==0.104.1
+uvicorn[standard]==0.23.2
+pydantic==2.4.2
+python-dotenv==1.0.0
+
+# Telegram
+pyrogram==2.0.106
+TgCrypto==1.2.5  # For faster Pyrogram
+
+# Database
+asyncpg==0.28.0
+psycopg2-binary==2.9.9
+sqlalchemy==2.0.23
+alembic==1.12.1
+
+# Redis
+redis==4.6.0
+aioredis==2.0.1
+
+# Authentication & Security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.6
+cryptography==41.0.7
+
+# Firebase (for push notifications)
+firebase-admin==6.1.0
+google-cloud-firestore==2.11.1
+
+# HTTP & Networking
+httpx==0.24.1
+aiohttp==3.8.6
+
+# Utilities
+python-dateutil==2.8.2
+pytz==2023.3
+
+# Development (optional)
+pytest==7.4.0
+pytest-asyncio==0.21.0
+black==23.7.0
+flake8==6.0.0
+
+# Monitoring & Logging
+structlog==23.1.0
+
+# Rate limiting
+slowapi==0.1.9
+
+# Data validation
+email-validator==2.0.0
+phonenumbers==8.13.20

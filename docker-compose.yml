@@ -1,0 +1,133 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: tgm_postgres
+    environment:
+      POSTGRES_DB: tgm_db
+      POSTGRES_USER: tgm_user
+      POSTGRES_PASSWORD: tgm_secure_password_change_this
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/migrations/001_initial_schema.sql:/docker-entrypoint-initdb.d/001_initial_schema.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - tgm_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tgm_user -d tgm_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: tgm_redis
+    command: redis-server --appendonly yes --requirepass redis_secure_password_change_this
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - tgm_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # API Server
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: tgm_api
+    environment:
+      DATABASE_URL: postgresql://tgm_user:tgm_secure_password_change_this@postgres:5432/tgm_db
+      REDIS_URL: redis://:redis_secure_password_change_this@redis:6379
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-change_this_to_random_secret}
+      FIREBASE_CREDENTIALS: ${FIREBASE_CREDENTIALS}
+    volumes:
+      - ./services/api:/app
+      - ./services/shared:/app/shared
+    ports:
+      - "8000:8000"
+    networks:
+      - tgm_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: python main.py
+
+  # Telegram Monitor Service
+  monitor:
+    build:
+      context: .
+      dockerfile: Dockerfile.monitor
+    container_name: tgm_monitor
+    environment:
+      DATABASE_URL: postgresql://tgm_user:tgm_secure_password_change_this@postgres:5432/tgm_db
+      REDIS_URL: redis://:redis_secure_password_change_this@redis:6379
+      TELEGRAM_API_ID: ${TELEGRAM_API_ID}
+      TELEGRAM_API_HASH: ${TELEGRAM_API_HASH}
+      TELEGRAM_PHONE: ${TELEGRAM_PHONE}
+    volumes:
+      - ./services/monitor:/app
+      - ./services/shared:/app/shared
+      - monitor_sessions:/app/sessions
+    networks:
+      - tgm_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      api:
+        condition: service_started
+    command: python telegram_monitor.py
+
+  # Nginx Reverse Proxy (optional for production)
+  nginx:
+    image: nginx:alpine
+    container_name: tgm_nginx
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - tgm_network
+    depends_on:
+      - api
+    profiles:
+      - production
+
+  # pgAdmin for database management (development only)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: tgm_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@tgm.local
+      PGADMIN_DEFAULT_PASSWORD: admin_password_change_this
+    ports:
+      - "5050:80"
+    networks:
+      - tgm_network
+    depends_on:
+      - postgres
+    profiles:
+      - development
+
+networks:
+  tgm_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  monitor_sessions:
